@@ -67,6 +67,7 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
 		|	IF comp stmt_list STMTEND { $$=MakeOPTree(IF, $2, $3); }
+		|	IF comp stmt_list ELSE stmt_list STMTEND { $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
 		;
 
 expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
@@ -226,8 +227,10 @@ void prtcode(int token, int val)
 		break;
 	}
 	case ELSE:
+	{
 		fprintf(fp, "$ --- else ---\n");
 		break;
+	}
 	case WHILE:
 		fprintf(fp, "$ --- while ---\n");
 		break;
