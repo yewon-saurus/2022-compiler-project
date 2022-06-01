@@ -22,14 +22,14 @@ id		{letter}({letter}|{digit})*
 %%
 {ws}	{/* do nothing */}
 {nl}	{lineno++; }
-더하기	{return(ADD); }
-빼기		{return(SUB); }
+"+"		{return(ADD); }
+"-"		{return(SUB); }
 :=		{return(ASSGN); }
 ;		{return(STMTEND); }
-시작		{return(START); }
+시작	{return(START); }
 끝		{return(END); }
-곱하기	{return(MUL); }
-나누기	{return(DIV); }
+"*"		{return(MUL); }
+"/"		{return(DIV); }
 if		{return(IF); }
 else	{return(ELSE); }
 while	{return(WHILE); }
