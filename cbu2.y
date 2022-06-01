@@ -66,6 +66,7 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 		;
 
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
+		|	IF comp ifstmt STMTEND { $$=MakeOPTree(IF, $2, $3); }
 		;
 
 expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
@@ -75,6 +76,19 @@ expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
 		|	term
 		;
 
+comp	:	expr LT term	{ $$=MakeOPTree(LT, $1, $3); }
+		|	expr LE term	{ $$=MakeOPTree(LE, $1, $3); }
+		|	expr GT term	{ $$=MakeOPTree(GT, $1, $3); }
+		|	expr GE term	{ $$=MakeOPTree(GE, $1, $3); }
+		|	expr EQ term	{ $$=MakeOPTree(EQ, $1, $3); }
+		|	expr NE term	{ $$=MakeOPTree(NE, $1, $3); }
+		;
+
+ifstmt	:	stmt_list
+		;
+
+loopstmt:	stmt_list
+		;
 
 term	:	ID		{ /* ID node is created in lex */ }
 		|	NUM		{ /* NUM node is created in lex */ }
