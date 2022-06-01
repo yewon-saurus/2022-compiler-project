@@ -24,6 +24,8 @@ typedef struct nodeType {
 int tsymbolcnt=0;
 int errorcnt=0;
 
+int lebalno=0;
+
 FILE *yyin;
 FILE *fp;
 
@@ -205,25 +207,42 @@ void prtcode(int token, int val)
 		break;
 	case LT:
 		fprintf(fp, "$ --- Less Than ---\n");
+		fprintf(fp, "-\n");
+		fprintf(fp, "COPY\n");
+		fprintf(fp, "GOPLUS LABEL%d\n", lebalno);
+		fprintf(fp, "GOFALSE LABEL%d\n", lebalno);
 		break;
 	case LE:
 		fprintf(fp, "$ --- Less Equal ---\n");
+		fprintf(fp, "-\n");
+		fprintf(fp, "GOPLUS LABEL%d\n", lebalno);
 		break;
 	case GT:
 		fprintf(fp, "$ --- Greater Than ---\n");
+		fprintf(fp, "-\n");
+		fprintf(fp, "COPY\n");
+		fprintf(fp, "GOMINUS LABEL%d\n", lebalno);
+		fprintf(fp, "GOFALSE LABEL%d\n", lebalno);
 		break;
 	case GE:
 		fprintf(fp, "$ --- Greater Equal ---\n");
+		fprintf(fp, "-\n");
+		fprintf(fp, "GOMINUS LABEL%d\n", lebalno);
 		break;
 	case EQ:
 		fprintf(fp, "$ --- Equal ---\n");
+		fprintf(fp, "-\n");
+		fprintf(fp, "GOTRUE LABEL%d\n", lebalno);
 		break;
 	case NE:
 		fprintf(fp, "$ --- Not Equal ---\n");
+		fprintf(fp, "-\n");
+		fprintf(fp, "GOFALSE LABEL%d\n", lebalno);
 		break;
 	case IF:
 	{
 		fprintf(fp, "$ --- if ---\n");
+		fprintf(fp, "LABEL LABEL%d\n", lebalno++);
 		break;
 	}
 	case ELSE:
