@@ -24,7 +24,8 @@ typedef struct nodeType {
 int tsymbolcnt=0;
 int errorcnt=0;
 
-int lebalno=0;
+int labelno=0;
+int looplabel=0;
 
 FILE *yyin;
 FILE *fp;
@@ -41,7 +42,7 @@ void codegen(Node* );
 void prtcode(int, int);
 
 void	dwgen();
-int	gentemp();
+int		gentemp();
 void	assgnstmt(int, int);
 void	numassgn(int, int);
 void	addstmt(int, int, int);
@@ -70,6 +71,7 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
 		|	IF comp stmt_list STMTEND { $$=MakeOPTree(IF, $2, $3); }
 		|	IF comp stmt_list ELSE stmt_list STMTEND { $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
+		|	WHILE comp loopstmt STMTEND { $$=MakeOPTree(WHILE, $2, $3); }
 		;
 
 expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
@@ -79,13 +81,16 @@ expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
 		|	term
 		;
 
-comp	:	expr LT term	{ $$=MakeOPTree(LT, $1, $3); }
-		|	expr LE term	{ $$=MakeOPTree(LE, $1, $3); }
-		|	expr GT term	{ $$=MakeOPTree(GT, $1, $3); }
-		|	expr GE term	{ $$=MakeOPTree(GE, $1, $3); }
-		|	expr EQ term	{ $$=MakeOPTree(EQ, $1, $3); }
-		|	expr NE term	{ $$=MakeOPTree(NE, $1, $3); }
+comp	:	expr LT expr	{ $$=MakeOPTree(LT, $1, $3); }
+		|	expr LE expr	{ $$=MakeOPTree(LE, $1, $3); }
+		|	expr GT expr	{ $$=MakeOPTree(GT, $1, $3); }
+		|	expr GE expr	{ $$=MakeOPTree(GE, $1, $3); }
+		|	expr EQ expr	{ $$=MakeOPTree(EQ, $1, $3); }
+		|	expr NE expr	{ $$=MakeOPTree(NE, $1, $3); }
 		;
+
+loopstmt:	stmt_list		{ fprintf(fp, "LABEL LOOP%d\n", looplabel); }
+		; 
 
 term	:	ID		{ /* ID node is created in lex */ }
 		|	NUM		{ /* NUM node is created in lex */ }
@@ -209,40 +214,40 @@ void prtcode(int token, int val)
 		fprintf(fp, "$ --- Less Than ---\n");
 		fprintf(fp, "-\n");
 		fprintf(fp, "COPY\n");
-		fprintf(fp, "GOPLUS LABEL%d\n", lebalno);
-		fprintf(fp, "GOFALSE LABEL%d\n", lebalno);
+		fprintf(fp, "GOPLUS LABEL%d\n", labelno);
+		fprintf(fp, "GOFALSE LABEL%d\n", labelno);
 		break;
 	case LE:
 		fprintf(fp, "$ --- Less Equal ---\n");
 		fprintf(fp, "-\n");
-		fprintf(fp, "GOPLUS LABEL%d\n", lebalno);
+		fprintf(fp, "GOPLUS LABEL%d\n", labelno);
 		break;
 	case GT:
 		fprintf(fp, "$ --- Greater Than ---\n");
 		fprintf(fp, "-\n");
 		fprintf(fp, "COPY\n");
-		fprintf(fp, "GOMINUS LABEL%d\n", lebalno);
-		fprintf(fp, "GOFALSE LABEL%d\n", lebalno);
+		fprintf(fp, "GOMINUS LABEL%d\n", labelno);
+		fprintf(fp, "GOFALSE LABEL%d\n", labelno);
 		break;
 	case GE:
 		fprintf(fp, "$ --- Greater Equal ---\n");
 		fprintf(fp, "-\n");
-		fprintf(fp, "GOMINUS LABEL%d\n", lebalno);
+		fprintf(fp, "GOMINUS LABEL%d\n", labelno);
 		break;
 	case EQ:
 		fprintf(fp, "$ --- Equal ---\n");
 		fprintf(fp, "-\n");
-		fprintf(fp, "GOTRUE LABEL%d\n", lebalno);
+		fprintf(fp, "GOTRUE LABEL%d\n", labelno);
 		break;
 	case NE:
 		fprintf(fp, "$ --- Not Equal ---\n");
 		fprintf(fp, "-\n");
-		fprintf(fp, "GOFALSE LABEL%d\n", lebalno);
+		fprintf(fp, "GOFALSE LABEL%d\n", labelno);
 		break;
 	case IF:
 	{
 		fprintf(fp, "$ --- if ---\n");
-		fprintf(fp, "LABEL LABEL%d\n", lebalno++);
+		fprintf(fp, "LABEL LABEL%d\n", labelno++);
 		break;
 	}
 	case ELSE:
@@ -251,8 +256,13 @@ void prtcode(int token, int val)
 		break;
 	}
 	case WHILE:
+	{
 		fprintf(fp, "$ --- while ---\n");
+		fprintf(fp, "GOTO LOOP%d\n", looplabel);
+		looplabel++;
+		fprintf(fp, "LABEL LABEL%d\n", labelno++);
 		break;
+	}
 	case ASSGN:
 		fprintf(fp, ":=\n");
 		break;
