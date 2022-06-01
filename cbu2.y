@@ -208,6 +208,33 @@ void prtcode(int token, int val)
 	case DIV:
 		fprintf(fp, "/\n");
 		break;
+	case LT:
+		fprintf(fp, "$ --- Less Than ---\n");
+		break;
+	case LE:
+		fprintf(fp, "$ --- Less Equal ---\n");
+		break;
+	case GT:
+		fprintf(fp, "$ --- Greater Than ---\n");
+		break;
+	case GE:
+		fprintf(fp, "$ --- Greater Equal ---\n");
+		break;
+	case EQ:
+		fprintf(fp, "$ --- Equal ---\n");
+		break;
+	case NE:
+		fprintf(fp, "$ --- Not Equal ---\n");
+		break;
+	case IF:
+		fprintf(fp, "$ --- if ---\n");
+		break;
+	case ELSE:
+		fprintf(fp, "$ --- else ---\n");
+		break;
+	case WHILE:
+		fprintf(fp, "$ --- while ---\n");
+		break;
 	case ASSGN:
 		fprintf(fp, ":=\n");
 		break;
