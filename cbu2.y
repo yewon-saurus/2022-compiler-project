@@ -27,7 +27,6 @@ int errorcnt=0;
 
 int labelno=0;
 int looplabel=0;
-int checkelse=0;
 
 FILE *yyin;
 FILE *fp;
@@ -72,8 +71,8 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
 		|	IF comp stmt_list STMTEND { $$=MakeOPTree(IF, $2, $3); }
-		|	IF comp stmt_list ELSE stmt_list STMTEND { checkelse=1; $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
-		|	WHILE comp stmt_list STMTEND { $$=MakeOPTree(WHILE, $2, $3); $2->son->noderep = isloop;}
+		|	IF comp stmt_list ELSE stmt_list STMTEND { $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); $5->son->son->noderep = iselse; }
+		|	WHILE comp stmt_list STMTEND { $$=MakeOPTree(WHILE, $2, $3); $2->son->noderep = isloop; }
 		;
 
 expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
@@ -195,14 +194,9 @@ void prtcode(Node * n)
 		fprintf(fp,"RVALUE %s\n", symtbl[n->tokenval]);
 		break;
 	case ID2:
-		if (checkelse == 1) {
-			checkelse = 2;
-		}
-		else if (checkelse == 2) {
+		if (n->noderep == iselse) {
 			fprintf(fp, "LABEL LABEL%d\n", labelno++);
-			checkelse = 0;
 		}
-		else { /* nothing */ }
 		fprintf(fp, "LVALUE %s\n", symtbl[n->tokenval]);
 		break;
 	case NUM:
