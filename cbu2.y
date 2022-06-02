@@ -27,6 +27,7 @@ int errorcnt=0;
 int labelno=0;
 int looplabel=0;
 int checkloop=0;
+int checkelse=0;
 
 FILE *yyin;
 FILE *fp;
@@ -71,7 +72,7 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
 		|	IF comp stmt_list STMTEND { $$=MakeOPTree(IF, $2, $3); }
-		|	IF comp stmt_list ELSE stmt_list STMTEND { $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
+		|	IF comp stmt_list ELSE stmt_list STMTEND { checkelse=1; $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
 		|	WHILE comp stmt_list STMTEND { checkloop=1; $$=MakeOPTree(WHILE, $2, $3); }
 		;
 
@@ -195,6 +196,14 @@ void prtcode(int token, int val)
 		fprintf(fp,"RVALUE %s\n", symtbl[val]);
 		break;
 	case ID2:
+		if (checkelse == 1) {
+			checkelse = 2;
+		}
+		else if (checkelse == 2) {
+			fprintf(fp, "LABEL LABEL%d\n", labelno++);
+			checkelse = 0;
+		}
+		else { /* nothing */ }
 		fprintf(fp, "LVALUE %s\n", symtbl[val]);
 		break;
 	case NUM:
