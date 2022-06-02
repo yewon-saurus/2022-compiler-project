@@ -26,6 +26,7 @@ int errorcnt=0;
 
 int labelno=0;
 int looplabel=0;
+int checkloop=0;
 
 FILE *yyin;
 FILE *fp;
@@ -71,7 +72,7 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
 		|	IF comp stmt_list STMTEND { $$=MakeOPTree(IF, $2, $3); }
 		|	IF comp stmt_list ELSE stmt_list STMTEND { $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
-		|	WHILE comp loopstmt STMTEND { $$=MakeOPTree(WHILE, $2, $3); }
+		|	WHILE comp stmt_list STMTEND { checkloop=1; $$=MakeOPTree(WHILE, $2, $3); }
 		;
 
 expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
@@ -88,9 +89,6 @@ comp	:	expr LT expr	{ $$=MakeOPTree(LT, $1, $3); }
 		|	expr EQ expr	{ $$=MakeOPTree(EQ, $1, $3); }
 		|	expr NE expr	{ $$=MakeOPTree(NE, $1, $3); }
 		;
-
-loopstmt:	stmt_list		{ fprintf(fp, "LABEL LOOP%d\n", looplabel); }
-		; 
 
 term	:	ID		{ /* ID node is created in lex */ }
 		|	NUM		{ /* NUM node is created in lex */ }
@@ -190,6 +188,10 @@ void prtcode(int token, int val)
 {
 	switch (token) {
 	case ID:
+		if (checkloop == 1) {
+			fprintf(fp, "LABEL LOOP%d\n", looplabel);
+			checkloop = 0;
+		}
 		fprintf(fp,"RVALUE %s\n", symtbl[val]);
 		break;
 	case ID2:
