@@ -41,7 +41,7 @@ Node * MakeOPTree(int, Node*, Node*);
 Node * MakeNode(int, int);
 Node * MakeListTree(Node*, Node*);
 void codegen(Node* );
-void prtcode(int, int);
+void prtcode(Node* );
 
 void	dwgen();
 int		gentemp();
@@ -180,20 +180,20 @@ void DFSTree(Node * n)
 {
 	if (n==NULL) return;
 	DFSTree(n->son);
-	prtcode(n->token, n->tokenval);
+	prtcode(n);
 	DFSTree(n->brother);
 	
 }
 
-void prtcode(int token, int val)
+void prtcode(Node * n)
 {
-	switch (token) {
+	switch (n->token) {
 	case ID:
 		if (checkloop == 1) {
 			fprintf(fp, "LABEL LOOP%d\n", looplabel);
 			checkloop = 0;
 		}
-		fprintf(fp,"RVALUE %s\n", symtbl[val]);
+		fprintf(fp,"RVALUE %s\n", symtbl[n->tokenval]);
 		break;
 	case ID2:
 		if (checkelse == 1) {
@@ -204,10 +204,10 @@ void prtcode(int token, int val)
 			checkelse = 0;
 		}
 		else { /* nothing */ }
-		fprintf(fp, "LVALUE %s\n", symtbl[val]);
+		fprintf(fp, "LVALUE %s\n", symtbl[n->tokenval]);
 		break;
 	case NUM:
-		fprintf(fp, "PUSH %d\n", val);
+		fprintf(fp, "PUSH %d\n", n->tokenval);
 		break;
 	case ADD:
 		fprintf(fp, "+\n");
