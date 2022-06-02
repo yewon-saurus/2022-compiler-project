@@ -17,6 +17,7 @@ typedef struct nodeType {
 	int tokenval;
 	struct nodeType *son;
 	struct nodeType *brother;
+	enum {iselse, isloop, nomal} noderep;
 	} Node;
 
 #define YYSTYPE Node*
@@ -26,7 +27,6 @@ int errorcnt=0;
 
 int labelno=0;
 int looplabel=0;
-int checkloop=0;
 int checkelse=0;
 
 FILE *yyin;
@@ -73,7 +73,7 @@ stmt_list: 	stmt_list stmt 	{$$=MakeListTree($1, $2);}
 stmt	: 	ID ASSGN expr STMTEND	{ $1->token = ID2; $$=MakeOPTree(ASSGN, $1, $3);}
 		|	IF comp stmt_list STMTEND { $$=MakeOPTree(IF, $2, $3); }
 		|	IF comp stmt_list ELSE stmt_list STMTEND { checkelse=1; $$=MakeListTree(MakeOPTree(ELSE, $2, $3), $5); }
-		|	WHILE comp stmt_list STMTEND { checkloop=1; $$=MakeOPTree(WHILE, $2, $3); }
+		|	WHILE comp stmt_list STMTEND { $$=MakeOPTree(WHILE, $2, $3); $2->son->noderep = isloop;}
 		;
 
 expr	: 	expr ADD term	{ $$=MakeOPTree(ADD, $1, $3); }
@@ -189,9 +189,8 @@ void prtcode(Node * n)
 {
 	switch (n->token) {
 	case ID:
-		if (checkloop == 1) {
+		if (n->noderep == isloop) {
 			fprintf(fp, "LABEL LOOP%d\n", looplabel);
-			checkloop = 0;
 		}
 		fprintf(fp,"RVALUE %s\n", symtbl[n->tokenval]);
 		break;
@@ -207,6 +206,9 @@ void prtcode(Node * n)
 		fprintf(fp, "LVALUE %s\n", symtbl[n->tokenval]);
 		break;
 	case NUM:
+		if (n->noderep == isloop) {
+			fprintf(fp, "LABEL LOOP%d\n", looplabel);
+		}
 		fprintf(fp, "PUSH %d\n", n->tokenval);
 		break;
 	case ADD:
